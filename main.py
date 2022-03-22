@@ -7,3 +7,5 @@ def efficiency(Ephoton, Egap, N):
     for i in range(0,N):
         if Ephoton > Egap:
             n += 1
+    eff = n/N
+    return eff
