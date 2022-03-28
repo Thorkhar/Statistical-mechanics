@@ -77,7 +77,7 @@ efficiency_sirius = sirius.calculate_efficiency()
 max_eff_sirius, ideal_gap_sirius = sirius.calculate_max_eff(efficiency_sirius)
 print('Max efficiency of the Sirius A system is at: ', max_eff_sirius, 'eV, with an efficiency of ', ideal_gap_sirius)
 
-create_plot(1, efficiency_sun, efficiency_sirius, 'Sun', 'Sirius A')
+create_plot(1, efficiency_sun, efficiency_sirius, 'Sun (T=5800K)', 'Sirius A (T=9940K)')
 
 # Double layer sun system
 doublelayer_eff = np.array(sun.calculate_doublelayer_eff())
