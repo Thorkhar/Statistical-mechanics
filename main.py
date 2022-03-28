@@ -15,7 +15,7 @@ class SolarCell:
     def integrate(self, lower_limit, upper_limit): #integration function
         return quad(self.integrand, lower_limit, upper_limit)
 
-    def calculate_efficiency(self, upper_limit=np.inf, set_bandgap=0):
+    def calculate_efficiency(self, upper_limit=np.inf, set_bandgap=0.):
         eff_results = [] #create empty array for the results
         N_total = self.integrate(0.001, upper_limit) #N_total integration can be kept out of the for loop to reduce computation time
 
@@ -43,8 +43,9 @@ class SolarCell:
     def calculate_doublelayer_eff(self):
         eff_results_gap1 = []
         layer1_eff_array = self.calculate_efficiency()
-        for i in np.arange(1.13, 5, 0.01): #double loop to calculate the max efficiency for different 1st layer bandgaps, calculating below 1.12eV is useless as the 2nd layer wont absorb anything there
-            layer1_eff = layer1_eff_array[round((i*1000))-1] #find the corresponding layer 1 efficiency
+
+        for i in np.arange(1.13, 5, 0.001): #double loop to calculate the max efficiency for different 1st layer bandgaps, calculating below 1.12eV is useless as the 2nd layer wont absorb anything there
+            layer1_eff = layer1_eff_array[round((i*1000))-1] #find the corresponding layer 1 efficiency, round because Python sometimes multiplies to a float instead of integer
             layer2_eff = self.calculate_efficiency(i,1.12)[0] #All photons above Egap1 have been absorbed, so now the integrate from Egap2 to Egap 1
             total_eff = layer1_eff + layer2_eff
             eff_results_gap1.append([layer1_eff, layer2_eff, total_eff])
@@ -55,10 +56,12 @@ def create_plot(n,y1, y2, color1, color2, name1, name2, xvalues=np.arange(0.001,
     plt.figure(n)
     plt.plot(xvalues, y1, label=name1, color=color1)
     plt.plot(xvalues, y2, label=name2, color=color2)
+
     if y3 != 0:
         plt.plot(xvalues, y3, label=name3, color=color3)
     plt.xlabel('Bandgap energy (eV)')
     plt.ylabel('Solar cell efficiency')
+
     if y3 != 0:
         plt.legend(loc="center right")
     else:
@@ -80,10 +83,10 @@ create_plot(1, efficiency_sun, efficiency_sirius, 'r', 'b', 'Sun', 'Sirius A')
 
 #Double layer sun system
 doublelayer_eff = np.array(sun.calculate_doublelayer_eff())
-create_plot(2, doublelayer_eff[:,0].tolist(), doublelayer_eff[:,1].tolist(), 'r', 'g', 'Layer 1', 'Layer 2', np.arange(1.13, 5, 0.01), doublelayer_eff[:,2].tolist(), 'y', 'Combined')
+create_plot(2, doublelayer_eff[:,0].tolist(), doublelayer_eff[:,1].tolist(), 'r', 'g', 'Layer 1', 'Layer 2', np.arange(1.13, 5, 0.001), doublelayer_eff[:,2].tolist(), 'y', 'Combined')
 max_value_index = np.argmax(doublelayer_eff[:,2])
 besteff = doublelayer_eff[max_value_index,2]
 
-print('Max efficiency of the double layer system is ', besteff, ' at a 1st layer bandgap of ', max_value_index*0.01+1.13)
+print('Max efficiency of the double layer system is ', besteff, ' at a 1st layer bandgap of ', max_value_index*0.001+1.13)
 
 plt.show()
