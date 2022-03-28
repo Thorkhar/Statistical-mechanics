@@ -7,8 +7,8 @@ class SolarCell: #create class so no repetition is needed when treating systems 
     def __init__(self, T:int):
         self.T = T
         self.beta = 1/(T*8.62 * 10**(-5)) # set beta = 1/kT
-        self.E_photon = 2.701*8.62 * 10**(-5)*T # set the photon energy
-        self.N_total =  self.integrate(0.001, np.inf) # calculate N_total now, instead of doing it unnecessary many times in the for loops
+        self.E_photon = 2.7*8.62 * 10**(-5)*T # set the photon energy
+        self.N_total =  2.4*((8.62 * 10**(-5) * T)**3) # calculate N_total now, instead of doing it unnecessary many times in the for loops
 
     def integrand(self, x):  # DoS x Bose-Einstein distribution to integrate over
         y = (x ** 2) / (np.exp(self.beta * x) - 1) # can ignore constants as they drop out in the division anyway
@@ -23,12 +23,12 @@ class SolarCell: #create class so no repetition is needed when treating systems 
         if set_bandgap == 0: # if no bandgap is pre-set we have the single layer system
             for i in np.arange(0.001, 5, 0.001): # loop over bandgap energies between 0.001 and 5 eV in steps of 0.001
                 N_absorbed = self.integrate(i, upper_limit) # calculate N for energies i to upper_limit (default infinity)
-                n_absorbed = N_absorbed[0] / self.N_total[0]
+                n_absorbed = N_absorbed[0] / self.N_total
                 eff = n_absorbed * (i / self.E_photon) # eff calculation according to the formula found
                 eff_results.append(eff)
         else: # if a bandgap is already set we are only interested in the efficiency for that specific bandgap, no for loop needed
             N_absorbed = self.integrate(set_bandgap, upper_limit)
-            eff = (N_absorbed[0] * set_bandgap)/(self.N_total[0] * self.E_photon)
+            eff = (N_absorbed[0] * set_bandgap)/(self.N_total * self.E_photon)
             eff_results.append(eff)
         return eff_results
 
