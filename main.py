@@ -7,8 +7,9 @@ class SolarCell:
         self.T = T
         self.beta = 1/(T*8.62 * 10**(-5)) #set beta = 1/kT
         self.E_photon = 2.701*8.62 * 10**(-5)*T #set the photon energy
+        self.N_total =  self.integrate(0.001, np.inf) #calculate N_total now, instead of doing it unnecessary many times in the for loops
 
-    def integrand(self, x):  # DoS function to integrate over
+    def integrand(self, x):  # DoS x Bose-Einstein distribution to integrate over
         y = (x ** 2) / (np.exp(self.beta * x) - 1) #can ignore constants as they drop out in the division anyway
         return y
 
@@ -17,19 +18,17 @@ class SolarCell:
 
     def calculate_efficiency(self, upper_limit=np.inf, set_bandgap=0.):
         eff_results = [] #create empty array for the results
-        N_total = self.integrate(0.001, upper_limit) #N_total integration can be kept out of the for loop to reduce computation time
 
-        if set_bandgap == 0:
-            for i in np.arange(0.001, 5, 0.001):
-                N_absorbed = self.integrate(i, upper_limit)
-                n_absorbed = N_absorbed[0] / N_total[0]
+        if set_bandgap == 0: #if no bandgap is pre-set we have the single layer system
+            for i in np.arange(0.001, 5, 0.001): #loop over bandgap energies between 0.001 and 5 eV (drop the integration with 0eV, the integrand blows up at that point and python cannot calculate
+                N_absorbed = self.integrate(i, upper_limit) #calculate N for energies i to upper_limit (default infinity)
+                n_absorbed = N_absorbed[0] / self.N_total[0]
                 eff = n_absorbed * (i / self.E_photon)
                 eff_results.append(eff)
-        else:
+        else: #if a bandgap is already set we are only interested in the efficiency for that specific bandgap, no for loop needed
             N_absorbed = self.integrate(set_bandgap, upper_limit)
-            n_absorbed = N_absorbed[0] / N_total[0]
-            eff = n_absorbed * (set_bandgap / self.E_photon)
-            eff_results.append(eff)
+            partial_eff = (N_absorbed[0] * set_bandgap)/(self.N_total[0] * self.E_photon)
+            eff_results.append(partial_eff)
 
         return eff_results
 
@@ -46,7 +45,7 @@ class SolarCell:
 
         for i in np.arange(1.13, 5, 0.001): #double loop to calculate the max efficiency for different 1st layer bandgaps, calculating below 1.12eV is useless as the 2nd layer wont absorb anything there
             layer1_eff = layer1_eff_array[round((i*1000))-1] #find the corresponding layer 1 efficiency, round because Python sometimes multiplies to a float instead of integer
-            layer2_eff = self.calculate_efficiency(i,1.12)[0] #All photons above Egap1 have been absorbed, so now the integrate from Egap2 to Egap 1
+            layer2_eff = self.calculate_efficiency(i, 1.12)[0] #All photons above Egap1 have been absorbed, so now the integrate from Egap2 to Egap 1
             total_eff = layer1_eff + layer2_eff
             eff_results_gap1.append([layer1_eff, layer2_eff, total_eff])
 
