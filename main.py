@@ -15,14 +15,20 @@ class SolarCell:
     def integrate(self, lower_limit, upper_limit): #integration function
         return quad(self.integrand, lower_limit, upper_limit)
 
-    def calculate_efficiency(self, upper_limit=np.inf):
+    def calculate_efficiency(self, upper_limit=np.inf, set_bandgap=0):
         eff_results = [] #create empty array for the results
         N_total = self.integrate(0.001, upper_limit) #N_total integration can be kept out of the for loop to reduce computation time
 
-        for i in np.arange(0.001, 5, 0.001):
-            N_absorbed = self.integrate(i, upper_limit)
+        if set_bandgap == 0:
+            for i in np.arange(0.001, 5, 0.001):
+                N_absorbed = self.integrate(i, upper_limit)
+                n_absorbed = N_absorbed[0] / N_total[0]
+                eff = n_absorbed * (i / self.E_photon)
+                eff_results.append(eff)
+        else:
+            N_absorbed = self.integrate(set_bandgap, upper_limit)
             n_absorbed = N_absorbed[0] / N_total[0]
-            eff = n_absorbed * (i / self.E_photon)
+            eff = n_absorbed * (set_bandgap / self.E_photon)
             eff_results.append(eff)
 
         return eff_results
@@ -38,8 +44,8 @@ class SolarCell:
         eff_results_gap1 = []
         layer1_eff_array = self.calculate_efficiency()
         for i in np.arange(1.13, 5, 0.01): #double loop to calculate the max efficiency for different 1st layer bandgaps, calculating below 1.12eV is useless as the 2nd layer wont absorb anything there
-            layer1_eff = layer1_eff_array[round((i*1000))-1]
-            layer2_eff = self.calculate_efficiency(i)[1120-1] #All photons above Egap1 have been absorbed, so now the integrate from 0 to Egap 1
+            layer1_eff = layer1_eff_array[round((i*1000))-1] #find the corresponding layer 1 efficiency
+            layer2_eff = self.calculate_efficiency(i,1.12)[0] #All photons above Egap1 have been absorbed, so now the integrate from Egap2 to Egap 1
             total_eff = layer1_eff + layer2_eff
             eff_results_gap1.append([layer1_eff, layer2_eff, total_eff])
 
